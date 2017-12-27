@@ -2,8 +2,10 @@ package system
 
 import (
 	"crypto/tls"
+	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/aelsabbahy/goss/util"
@@ -13,15 +15,18 @@ type HTTP interface {
 	HTTP() string
 	Status() (int, error)
 	Body() (io.Reader, error)
+	Header() (io.Reader, error)
 	Exists() (bool, error)
 	SetAllowInsecure(bool)
 	SetNoFollowRedirects(bool)
+	SetXForwardedSSL(bool)
 }
 
 type DefHTTP struct {
 	http              string
 	allowInsecure     bool
 	noFollowRedirects bool
+	xForwardedSSL     bool
 	resp              *http.Response
 	Timeout           int
 	loaded            bool
@@ -35,6 +40,15 @@ func NewDefHTTP(http string, system *System, config util.Config) HTTP {
 		noFollowRedirects: config.NoFollowRedirects,
 		Timeout:           config.Timeout,
 	}
+}
+
+func HeaderToArray(header http.Header) (res []string) {
+    for name, values := range header {
+        for _, value := range values {
+            res = append(res, fmt.Sprintf("%s: %s", name, value))
+        }
+    }
+    return
 }
 
 func (u *DefHTTP) setup() error {
@@ -57,7 +71,14 @@ func (u *DefHTTP) setup() error {
 			return http.ErrUseLastResponse
 		}
 	}
-	u.resp, u.err = client.Get(u.http)
+
+	req, err := http.NewRequest("GET", "u.http", nil)
+	_ = err
+	if u.xForwardedSSL {
+        req.Header.Add("X-Forwarded-Proto", "https")
+	}
+
+    u.resp, u.err = client.Do(req)
 
 	return u.err
 }
@@ -77,6 +98,10 @@ func (u *DefHTTP) SetAllowInsecure(t bool) {
 	u.allowInsecure = t
 }
 
+func (u *DefHTTP) SetXForwardedSSL(t bool) {
+	u.xForwardedSSL = t
+}
+
 func (u *DefHTTP) ID() string {
 	return u.http
 }
@@ -91,6 +116,16 @@ func (u *DefHTTP) Status() (int, error) {
 
 	return u.resp.StatusCode, nil
 }
+
+func (u *DefHTTP) Header() (io.Reader, error) {
+    if err := u.setup(); err != nil {
+        return nil, err
+    }
+
+    var headerString = strings.Join(HeaderToArray(u.resp.Header), "\n")
+    return strings.NewReader(headerString), nil
+}
+
 
 func (u *DefHTTP) Body() (io.Reader, error) {
 	if err := u.setup(); err != nil {

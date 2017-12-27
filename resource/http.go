@@ -10,10 +10,12 @@ type HTTP struct {
 	Meta              meta     `json:"meta,omitempty" yaml:"meta,omitempty"`
 	HTTP              string   `json:"-" yaml:"-"`
 	Status            matcher  `json:"status" yaml:"status"`
+	Header            []string `json:"header" yaml:"header"`
+	Body              []string `json:"body" yaml:"body"`
 	AllowInsecure     bool     `json:"allow-insecure" yaml:"allow-insecure"`
 	NoFollowRedirects bool     `json:"no-follow-redirects" yaml:"no-follow-redirects"`
+	XForwardedSSL     bool     `json:"x-forwarded-ssl" yaml:"x-forwarded-ssl"`
 	Timeout           int      `json:"timeout" yaml:"timeout"`
-	Body              []string `json:"body" yaml:"body"`
 }
 
 func (u *HTTP) ID() string      { return u.HTTP }
@@ -28,15 +30,19 @@ func (u *HTTP) Validate(sys *system.System) []TestResult {
 	if u.Timeout == 0 {
 		u.Timeout = 5000
 	}
-	sysHTTP := sys.NewHTTP(u.HTTP, sys, util.Config{AllowInsecure: u.AllowInsecure, NoFollowRedirects: u.NoFollowRedirects, Timeout: u.Timeout})
+	sysHTTP := sys.NewHTTP(u.HTTP, sys, util.Config{AllowInsecure: u.AllowInsecure, NoFollowRedirects: u.NoFollowRedirects, XForwardedSSL: u.XForwardedSSL, Timeout: u.Timeout})
 	sysHTTP.SetAllowInsecure(u.AllowInsecure)
 	sysHTTP.SetNoFollowRedirects(u.NoFollowRedirects)
+	sysHTTP.SetXForwardedSSL(u.XForwardedSSL)
 
 	var results []TestResult
 	results = append(results, ValidateValue(u, "status", u.Status, sysHTTP.Status, skip))
 	if shouldSkip(results) {
 		skip = true
 	}
+	if len(u.Header) > 0 {
+        results = append(results, ValidateValue(u, "Header", u.Header, sysHTTP.Header, skip))
+    }
 	if len(u.Body) > 0 {
 		results = append(results, ValidateContains(u, "Body", u.Body, sysHTTP.Body, skip))
 	}
@@ -50,9 +56,11 @@ func NewHTTP(sysHTTP system.HTTP, config util.Config) (*HTTP, error) {
 	u := &HTTP{
 		HTTP:              http,
 		Status:            status,
+		Header:            []string{},
 		Body:              []string{},
 		AllowInsecure:     config.AllowInsecure,
 		NoFollowRedirects: config.NoFollowRedirects,
+		XForwardedSSL:     config.XForwardedSSL,
 		Timeout:           config.Timeout,
 	}
 	return u, err

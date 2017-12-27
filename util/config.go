@@ -13,6 +13,7 @@ type Config struct {
 	Timeout           int
 	AllowInsecure     bool
 	NoFollowRedirects bool
+	XForwardedSSL     bool
 	Server            string
 }
 

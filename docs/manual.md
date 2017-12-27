@@ -112,7 +112,7 @@ This will add a test for a resource. Non existent resources will add a test to e
 * `file` - can validate a [file](#file) existence, permissions, stats (size, etc) and contents
 * `goss` - allows you to include the contents of another [gossfile](#gossfile)
 * `group` - can validate the existence and values of a [group](#group) on the system
-* `http` - can validate the HTTP response code and content of a URI, see [http](#http)
+* `http` - can validate the HTTP response code, headers and content of a URI, see [http](#http)
 * `interface` - can validate the existence and values (es. the addresses) of a network interface, see [interface](#interface)
 * `kernel-param` - can validate kernel parameters (sysctl values), see [kernel-param](#kernel-param)
 * `mount` - can validate the existence and options relative to a [mount](#mount) point
@@ -567,7 +567,9 @@ http:
     # optional attributes
     allow-insecure: false
     no-follow-redirects: false # Setting this to true will NOT follow redirects
+    x-forwarded-ssl: true # Setting this to true will add the header X-Forwarded-Proto=https to the request
     timeout: 1000
+    header: [] # Check http response headers for these patterns (e.g. "Content-Type: text/html")
     body: [] # Check http response content for these patterns
 ```
 
