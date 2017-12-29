@@ -20,6 +20,7 @@ type HTTP interface {
 	SetAllowInsecure(bool)
 	SetNoFollowRedirects(bool)
 	SetXForwardedSSL(bool)
+	SetHost(string)
 }
 
 type DefHTTP struct {
@@ -27,6 +28,7 @@ type DefHTTP struct {
 	allowInsecure     bool
 	noFollowRedirects bool
 	xForwardedSSL     bool
+	host              string
 	resp              *http.Response
 	Timeout           int
 	loaded            bool
@@ -38,6 +40,8 @@ func NewDefHTTP(http string, system *System, config util.Config) HTTP {
 		http:              http,
 		allowInsecure:     config.AllowInsecure,
 		noFollowRedirects: config.NoFollowRedirects,
+		xForwardedSSL:     config.XForwardedSSL,
+		host:              config.Host,
 		Timeout:           config.Timeout,
 	}
 }
@@ -72,10 +76,14 @@ func (u *DefHTTP) setup() error {
 		}
 	}
 
-	req, err := http.NewRequest("GET", "u.http", nil)
+	req, err := http.NewRequest("GET", u.http, nil)
 	_ = err
 	if u.xForwardedSSL {
         req.Header.Add("X-Forwarded-Proto", "https")
+	}
+
+	if len(u.host) > 0 {
+        req.Host = u.host;
 	}
 
     u.resp, u.err = client.Do(req)
@@ -102,9 +110,14 @@ func (u *DefHTTP) SetXForwardedSSL(t bool) {
 	u.xForwardedSSL = t
 }
 
+func (u *DefHTTP) SetHost(t string) {
+	u.host = t
+}
+
 func (u *DefHTTP) ID() string {
 	return u.http
 }
+
 func (u *DefHTTP) HTTP() string {
 	return u.http
 }

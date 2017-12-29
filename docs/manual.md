@@ -568,6 +568,7 @@ http:
     allow-insecure: false
     no-follow-redirects: false # Setting this to true will NOT follow redirects
     x-forwarded-ssl: true # Setting this to true will add the header X-Forwarded-Proto=https to the request
+    host: nil # Set the host request header
     timeout: 1000
     header: [] # Check http response headers for these patterns (e.g. "Content-Type: text/html")
     body: [] # Check http response content for these patterns
