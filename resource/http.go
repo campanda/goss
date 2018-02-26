@@ -15,6 +15,7 @@ type HTTP struct {
 	AllowInsecure     bool     `json:"allow-insecure" yaml:"allow-insecure"`
 	NoFollowRedirects bool     `json:"no-follow-redirects" yaml:"no-follow-redirects"`
 	XForwardedSSL     bool     `json:"x-forwarded-ssl" yaml:"x-forwarded-ssl"`
+	Authorization     string   `json:"authorization" yaml:"authorization"`
 	Host              string   `json:"host" yaml:"host"`
 	Timeout           int      `json:"timeout" yaml:"timeout"`
 }
@@ -31,10 +32,11 @@ func (u *HTTP) Validate(sys *system.System) []TestResult {
 	if u.Timeout == 0 {
 		u.Timeout = 5000
 	}
-	sysHTTP := sys.NewHTTP(u.HTTP, sys, util.Config{AllowInsecure: u.AllowInsecure, NoFollowRedirects: u.NoFollowRedirects, XForwardedSSL: u.XForwardedSSL, Host: u.Host, Timeout: u.Timeout})
+	sysHTTP := sys.NewHTTP(u.HTTP, sys, util.Config{AllowInsecure: u.AllowInsecure, NoFollowRedirects: u.NoFollowRedirects, XForwardedSSL: u.XForwardedSSL, Authorization: u.Authorization, Host: u.Host, Timeout: u.Timeout})
 	sysHTTP.SetAllowInsecure(u.AllowInsecure)
 	sysHTTP.SetNoFollowRedirects(u.NoFollowRedirects)
 	sysHTTP.SetXForwardedSSL(u.XForwardedSSL)
+	sysHTTP.SetAuthorization(u.Authorization)
 	sysHTTP.SetHost(u.Host)
 
 	var results []TestResult
@@ -63,6 +65,7 @@ func NewHTTP(sysHTTP system.HTTP, config util.Config) (*HTTP, error) {
 		AllowInsecure:     config.AllowInsecure,
 		NoFollowRedirects: config.NoFollowRedirects,
 		XForwardedSSL:     config.XForwardedSSL,
+		Authorization:     config.Authorization,
 		Host:              config.Host,
 		Timeout:           config.Timeout,
 	}

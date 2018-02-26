@@ -14,6 +14,7 @@ type Config struct {
 	AllowInsecure     bool
 	NoFollowRedirects bool
 	XForwardedSSL     bool
+	Authorization     string
 	Host              string
 	Server            string
 }
